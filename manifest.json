@@ -1,8 +1,8 @@
 {
   "id": "./ORVO.html",
-  "name": "ORVO AI — Find What Others Miss",
-  "short_name": "ORVO AI",
-  "description": "Discover overlooked problems, hidden opportunities, and practical solutions.",
+  "name": "ORVO BY ZAHRA",
+  "short_name": "ORVO",
+  "description": "Find What Others Miss.",
   "start_url": "./ORVO.html",
   "scope": "./",
   "display": "standalone",
@@ -11,14 +11,9 @@
   "orientation": "any",
   "icons": [
     {
-      "src": "./icons/orvo-192.png",
-      "sizes": "192x192",
-      "type": "image/png"
-    },
-    {
-      "src": "./icons/orvo-512.png",
-      "sizes": "512x512",
-      "type": "image/png"
+      "src": "./icons/orvo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ]
 }
