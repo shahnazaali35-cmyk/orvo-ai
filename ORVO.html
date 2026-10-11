@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORVO AI — Find What Others Miss</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #07111f;
+    color: #eef4ff;
+    min-height: 100vh;
+    padding: 30px 16px;
+}
+
+.container {
+    max-width: 850px;
+    margin: auto;
+}
+
+header {
+    text-align: center;
+    padding: 28px 10px;
+}
+
+.logo {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: 5px;
+    color: #65d9ff;
+}
+
+.tagline {
+    color: #9caec7;
+    margin-top: 8px;
+}
+
+.panel {
+    background: #101e31;
+    border: 1px solid #263b55;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 20px;
+}
+
+h2 {
+    margin-top: 0;
+    font-size: 21px;
+}
+
+label {
+    display: block;
+    margin: 18px 0 9px;
+    color: #c9d8ed;
+}
+
+textarea, select {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #344b67;
+    background: #091526;
+    color: white;
+    font: inherit;
+}
+
+textarea {
+    min-height: 145px;
+    resize: vertical;
+}
+
+button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 15px;
+    border: none;
+    border-radius: 10px;
+    background: #65d9ff;
+    color: #07111f;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.status {
+    margin-top: 14px;
+    color: #a9bad0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+#result {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.75;
+    color: #dce8f8;
+}
+
+footer {
+    text-align: center;
+    color: #8294ad;
+    font-size: 13px;
+    padding: 15px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<header>
+    <div class="logo">ORVO AI</div>
+    <div class="tagline">Find What Others Miss.</div>
+    <p>Discover overlooked problems, hidden opportunities, and practical solutions.</p>
+</header>
+
+<section class="panel">
+    <h2>Explore a Problem</h2>
+    <p>Describe a problem, an idea, or something you think could be improved.</p>
+
+    <label for="problem">What would you like ORVO to investigate?</label>
+    <textarea id="problem" placeholder="Example: Students struggle to find quiet places to study, and libraries are often crowded."></textarea>
+
+    <label for="category">Choose a field</label>
+    <select id="category">
+        <option>Any field</option>
+        <option>Education</option>
+        <option>Environment</option>
+        <option>Technology</option>
+        <option>Everyday life</option>
+        <option>Business and opportunities</option>
+        <option>Health and wellbeing</option>
+        <option>Community problems</option>
+    </select>
+
+    <button id="discover">Discover Possibilities</button>
+    <div class="status" id="status">Checking the local AI connection...</div>
+</section>
+
+<section class="panel">
+    <h2>ORVO's Analysis</h2>
+    <div id="result">Your analysis will appear here after you submit a problem.</div>
+</section>
+
+<footer>ORVO AI · Powered locally by Llama 3.2</footer>
+
+</div>
+
+<script>
+const model = "llama3.2:1b";
+const api = "http://localhost:11434/api/chat";
+
+const statusBox = document.getElementById("status");
+const resultBox = document.getElementById("result");
+const button = document.getElementById("discover");
+
+async function checkConnection() {
+    try {
+        const response = await fetch("http://localhost:11434/api/tags");
+        if (!response.ok) throw new Error("The local AI server did not respond.");
+        const data = await response.json();
+        const found = data.models && data.models.some(m => m.name.startsWith(model));
+
+        if (found) {
+            statusBox.textContent = "Local AI server detected. ORVO is ready to test.";
+        } else {
+            statusBox.textContent = "Ollama is running, but the selected model was not found. Check your model installation.";
+        }
+    } catch (error) {
+        statusBox.textContent = "Connection check failed. Make sure Ollama is running. If it is, your browser may be blocking local access.";
+    }
+}
+
+button.addEventListener("click", async function () {
+    const problem = document.getElementById("problem").value.trim();
+    const category = document.getElementById("category").value;
+
+    if (!problem) {
+        resultBox.textContent = "Please describe a problem first.";
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Investigating...";
+    statusBox.textContent = "ORVO is asking the local AI to analyse your problem...";
+    resultBox.textContent = "Thinking... This may take a little while on your laptop.";
+
+    const prompt = `
+You are ORVO AI, an analytical problem-discovery assistant.
+Your tagline is "Find What Others Miss."
+
+Field: ${category}
+Problem or idea: ${problem}
+
+Analyse the user's specific input. Do not return a generic, repetitive template.
+Be honest about uncertainty. Do not invent statistics, research, or facts.
+Find overlooked causes and practical opportunities.
+
+Use these headings:
+1. THE CORE PROBLEM
+2. WHAT OTHERS MAY BE MISSING
+3. POSSIBLE ROOT CAUSES
+4. HIDDEN OPPORTUNITIES
+5. THREE PRACTICAL SOLUTIONS
+6. THE MOST PROMISING IDEA
+7. FIRST STEPS TO TEST IT
+8. RISKS AND LIMITATIONS
+
+Give specific, useful reasoning based on the user's input.
+If information is missing, state what needs to be checked.
+`;
+
+    try {
+        const response = await fetch(api, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: model,
+                stream: false,
+                messages: [
+                    {
+                        role: "system",
+                        content: "You are ORVO AI, an independent problem investigator whose mission is FIND WHAT OTHERS MISS. Analyse the specific input rather "
+                    },
+                    {
+                        role: "user",
+                        content: prompt
+                    }
+                ],
+                options: {
+                    temperature: 0.7
+                }
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error("Ollama returned error " + response.status);
+        }
+
+        const data = await response.json();
+        resultBox.textContent = data.message?.content || "The AI returned an empty answer.";
+        statusBox.textContent = "Analysis complete. Generated by your local AI model.";
+    } catch (error) {
+        resultBox.textContent =
+            "ORVO could not reach the AI.\n\n" +
+            "Error: " + error.message + "\n\n" +
+            "If the browser reports a CORS or access-control error, the browser is blocking this connection. We will fix that next. You do not need to pay for an AI subscription.";
+        statusBox.textContent = "Local AI connection needs troubleshooting.";
+    } finally {
+        button.disabled = false;
+        button.textContent = "Discover Possibilities";
+    }
+});
+
+checkConnection();
+</script>
+</body>
+</html>
