@@ -213,5 +213,13 @@ Identify overlooked causes and realistic opportunities. Recommend a practical, l
 
 checkConnection();
 </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js")
+      .catch(error => console.error("ORVO service worker error:", error));
+  });
+}
+</script>
 </body>
 </html>
